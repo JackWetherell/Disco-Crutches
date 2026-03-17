@@ -32,7 +32,7 @@ This is the code and wiring for the interactive LED system for mobility aids tha
 - BNO055 IMU sensor
 - 470Ω resistor (data line protection)
 - External 5V power supply (I use a power pank)
-- Jumper wires (I used perboard)
+- Jumper wires (I used perfboard)
 
 ---
 
