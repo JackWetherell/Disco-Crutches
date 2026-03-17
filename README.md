@@ -50,21 +50,23 @@ Install via Arduino Library Manager:
 
 ### Arduino Nano ↔ BNO055 (IMU)
 
-Arduino Nano → BNO055
-
 5V → VIN
+
 GND → GND
+
 A4 → SDA
+
 A5 → SCL
+
 
 ---
 
 ### Arduino Nano ↔ WS2812B LED Strip
 
-Arduino Nano → LED Strip
-
 D10 → DIN (through 470Ω resistor)
+
 5V → +5V
+
 GND → GND
 
 
