@@ -21,7 +21,7 @@ This is the code and wiring for the interactive LED system for crutches that rea
 - **Dynamic Ripple Effect**  
   On each step, a ripple travels up the LED strip.
 
-- **Color Cycling**
+- **Color Cycling**  
   White, Light Blue, Dark Blue, repeat.
 
 - **Queued Animation**  
