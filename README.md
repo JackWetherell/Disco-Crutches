@@ -1,12 +1,12 @@
 # Crutch LED System
 
-I broke my foot and decided my crutches needed an upgrade. They are painted blue with LED strips along the structure. The Arduino-controlled LEDs twinkle like stars when idle, and with each step a blue shooting star travels up the crutch.
+I broke my foot and decided my crutches needed an upgrade. They are painted blue with LED strips along the structure. The Arduino-controlled LEDs twinkle like stars when idle, and with each step a blue shooting star soars around crutch.
 
 <p align="center">
   <img src="images/demo.gif" width="300">
 </p>
 
-This is the code and wiring for the interactive LED system for mobility aids that reacts to walking motion using an IMU sensor.
+This is the code and wiring for the interactive LED system for crutches that react to walking motion using an IMU sensor.
 
 ---
 
