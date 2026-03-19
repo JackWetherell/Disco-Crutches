@@ -35,7 +35,7 @@ This is the code and wiring for the interactive LED system for crutches that rea
 - WS2812B LED strip (100 LEDs recommended)
 - BNO055 IMU sensor
 - 470Ω resistor (data line protection)
-- External 5V power supply (I use a power pank)
+- External 5V power supply (I use a USB power bank)
 - Jumper wires (I used perfboard)
 
 ---
