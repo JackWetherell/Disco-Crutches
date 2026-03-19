@@ -1,6 +1,10 @@
 # Crutch LED System
 
-I broke my foot and I wanted the crutches to look cool. They are painted blue with strips of LEDS along the structure. The Arduino controlled LEDs twinkle white like stars, and when I step a blue shooting star fires through the sky.
+I broke my foot and decided my crutches needed an upgrade. They are painted blue with LED strips along the structure. The Arduino-controlled LEDs twinkle like stars when idle, and with each step a blue shooting star travels up the crutch.
+
+<p align="center">
+  <img src="images/demo.gif" width="300">
+</p>
 
 This is the code and wiring for the interactive LED system for mobility aids that reacts to walking motion using an IMU sensor.
 
@@ -48,26 +52,6 @@ Install via Arduino Library Manager:
 
 ## Wiring Diagram
 
-### Arduino Nano ↔ BNO055 (IMU)
-
-5V → VIN
-
-GND → GND
-
-A4 → SDA
-
-A5 → SCL
-
-
----
-
-### Arduino Nano ↔ WS2812B LED Strip
-
-D10 → DIN (through 470Ω resistor)
-
-5V → +5V
-
-GND → GND
-
-
----
+<p align="center">
+  <img src="images/schematic.png" width="700">
+</p>
