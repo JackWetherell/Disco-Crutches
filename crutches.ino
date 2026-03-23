@@ -43,6 +43,7 @@
 #include <FastLED.h>
 
 // LED config
+// NOTE: Change NUM_LEDS to match your strip length and recompile.
 #define LED_PIN 10
 #define NUM_LEDS 100
 #define BRIGHTNESS 50
@@ -53,16 +54,32 @@ const uint16_t MAX_MA = 1800;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 // Baseline activity smoothing
+//
+// We track two exponential moving averages (EMAs):
+//   baseMag  — slow-moving average of raw acceleration magnitude,
+//              representing the "background" level (gravity + gentle movement).
+//   activity — fast-moving average of |mag - baseMag|, representing
+//              how "spiky" or energetic the current motion is.
+//
+// EMA update rule:  value = alpha * value + (1 - alpha) * sample
+// Higher alpha → smoother / slower to react.
 float baseMag = 9.8f;                 // baseline acceleration magnitude (approx g)
 float activity = 0.0f;                // smoothed "spikiness"
-const float baseAlpha = 0.98f;        // baseline smoothing (0.97–0.995)
-const float actAlpha  = 0.90f;        // activity smoothing (0.85–0.95)
+const float baseAlpha = 0.98f;        // baseline smoothing (0.97–0.995); high = very slow drift
+const float actAlpha  = 0.90f;        // activity smoothing (0.85–0.95); lower = reacts faster
 
 // Step detection parameters
-float stepHigh = 1.8f;                // trigger threshold 
+//
+// Hysteresis thresholds prevent rapid re-triggering:
+//   activity must rise above stepHigh  → trigger candidate
+//   activity must fall below stepLow   → sensor considered "quiet" again
+// lockoutMs   — minimum gap between any two triggers (debounce).
+// quietMsRequired — how long activity must stay below stepLow before
+//                   the detector re-arms (prevents double-counting one step).
+float stepHigh = 1.8f;                // trigger threshold
 float stepLow  = 0.7f;                // must drop below this to be considered "quiet"
-const uint16_t lockoutMs = 300;       // minimum time between triggers
-const uint16_t quietMsRequired = 400; // must be quiet this long before re-arming
+const uint16_t lockoutMs = 300;       // minimum time between triggers (ms)
+const uint16_t quietMsRequired = 400; // must be quiet this long before re-arming (ms)
 
 // Initialisation
 unsigned long lastStep = 0;
@@ -107,6 +124,8 @@ void updateRipple() {
   for (int i = -(int)rippleWidth; i <= (int)rippleWidth; i++) {
     int p = center + i;
     if (p < 0 || p >= NUM_LEDS) continue;
+    // Linear brightness falloff from center to edge of ripple:
+    // center pixel (i=0) → 255, edge pixel (i=±rippleWidth) → ~0.
     int b = 255 - abs(i) * (255 / (rippleWidth + 1));
     b = constrain(b, 0, 255);
     CRGB scaled = currentColor;
@@ -137,39 +156,48 @@ void updateTwinkle() {
 
 bool detectStep() {
   sensors_event_t e;
-  bno.getEvent(&e, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+  // Request accelerometer vector; returns false on I2C failure.
+  if (!bno.getEvent(&e, Adafruit_BNO055::VECTOR_ACCELEROMETER)) {
+    return false;  // skip this sample if sensor read fails
+  }
 
   float ax = e.acceleration.x;
   float ay = e.acceleration.y;
   float az = e.acceleration.z;
 
   float mag = sqrt(ax*ax + ay*ay + az*az);
+
+  // Update slow baseline (tracks gravity + low-frequency drift).
   baseMag = baseAlpha * baseMag + (1.0f - baseAlpha) * mag;
+  // Update fast activity (tracks short bursts above baseline).
   float delta = fabs(mag - baseMag);
   activity = actAlpha * activity + (1.0f - actAlpha) * delta;
 
   unsigned long now = millis();
 
+  // Re-arm after lockout period regardless of activity level.
   if (!stepArmed && (now - lastStep) >= lockoutMs) {
     stepArmed = true;
     quietSince = 0;
   }
 
+  // Track how long the sensor has been quiet; re-arm early if quiet long enough.
   if (activity < stepLow) {
     if (quietSince == 0) quietSince = now;
     if (!stepArmed && (now - quietSince) >= quietMsRequired) {
-      stepArmed = true;  
+      stepArmed = true;
     }
   } else {
-    quietSince = 0;   
+    quietSince = 0;
   }
 
+  // Detect rising edge: activity just crossed above stepHigh.
   bool risingCross = (prevActivity <= stepHigh && activity > stepHigh);
   prevActivity = activity;
 
   if (stepArmed && risingCross && (now - lastStep) > lockoutMs) {
     lastStep = now;
-    stepArmed = false; 
+    stepArmed = false;
     return true;
   }
 
@@ -188,7 +216,26 @@ void setup() {
   FastLED.show();
 
   Wire.begin();
-  if (!bno.begin()) {
+
+  // Attempt IMU initialisation with up to 5 retries.
+  // Blinks red while retrying; continues if eventually successful.
+  // If all retries fail, blinks red indefinitely to signal the fault.
+  const uint8_t MAX_IMU_RETRIES = 5;
+  bool imuOk = false;
+  for (uint8_t attempt = 0; attempt < MAX_IMU_RETRIES; attempt++) {
+    if (bno.begin()) {
+      imuOk = true;
+      break;
+    }
+    // Flash red once per failed attempt to give visual feedback.
+    fill_solid(leds, NUM_LEDS, CRGB::Red);
+    FastLED.show(); delay(200);
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show(); delay(300);
+  }
+
+  if (!imuOk) {
+    // All retries exhausted — blink red indefinitely to signal fault.
     while (true) {
       fill_solid(leds, NUM_LEDS, CRGB::Red);
       FastLED.show(); delay(200);
@@ -196,6 +243,7 @@ void setup() {
       FastLED.show(); delay(200);
     }
   }
+
   bno.setExtCrystalUse(true);
 }
 

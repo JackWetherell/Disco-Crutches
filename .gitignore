@@ -1,0 +1,8 @@
+# KiCad auto-generated files
+wiring/schematic/fp-info-cache
+wiring/schematic/#auto_saved_files#/
+wiring/schematic/*.lck
+wiring/schematic/*-backups/
+
+# KiCad local/personal settings (not project-wide)
+wiring/schematic/*.kicad_prl
